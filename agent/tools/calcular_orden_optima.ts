@@ -10,9 +10,10 @@ export default defineTool({
     description: "Calcula la orden de compra óptima. Soporta ignorar productos específicos y ajustarse a un presupuesto máximo.",
     inputSchema: z.object({
         productos_excluidos: z.array(z.string()).optional().describe("Lista de nombres de productos a excluir de la orden (porque el usuario los rechazó o no los quiere)."),
-        presupuesto_maximo: z.number().optional().describe("Monto máximo en dólares/pesos que el usuario está dispuesto a gastar. Si la orden lo supera, se omitirán los productos menos urgentes.")
+        presupuesto_maximo: z.number().optional().describe("Monto máximo en dólares/pesos que el usuario está dispuesto a gastar. Si la orden lo supera, se omitirán los productos menos urgentes."),
+        productos_adicionales: z.array(z.object({ nombre: z.string(), cantidad: z.number() })).optional().describe("Productos que el usuario pidió comprar explícitamente aunque tengan stock. Especifica nombre y cantidad (asume 1 si no se especifica).")
     }),
-    async execute({ productos_excluidos, presupuesto_maximo }) {
+    async execute({ productos_excluidos, presupuesto_maximo, productos_adicionales }) {
         try {
             let [{ data: invData, error: errInv }, { data: provData, error: errProv }, { data: preciosData, error: errPrec }] = await Promise.all([
                 supabase.from('inventario').select('*'),
@@ -30,6 +31,20 @@ export default defineTool({
             }
 
             let criticos = invData.filter(p => p.stock_actual < p.stock_minimo);
+            
+            const cantidadesManuales: Record<string, number> = {};
+            if (productos_adicionales && productos_adicionales.length > 0) {
+                for (const p_add of productos_adicionales) {
+                    const match = invData.find(inv => inv.producto.toLowerCase() === p_add.nombre.toLowerCase());
+                    if (match) {
+                        if (!criticos.some(c => c.id === match.id)) {
+                            criticos.push(match);
+                        }
+                        // Si no especificó cantidad o es menor a 1, asumimos 1
+                        cantidadesManuales[match.id] = Math.max(1, p_add.cantidad || 1);
+                    }
+                }
+            }
             const proveedoresMap = new Map(provData.map(p => [p.id, p]));
             const inventarioMap = new Map(invData.map(p => [p.id, p]));
             
@@ -77,7 +92,10 @@ export default defineTool({
                                 ordenes[provId] = { proveedor: proveedoresMap.get(provId), productos: [], total: 0, estrategia: 'Normal', cumple_minimo: true };
                             }
                             
-                            const cantidadNecesaria = c.stock_minimo - c.stock_actual;
+                            const cantidadNecesaria = cantidadesManuales[c.id] !== undefined 
+                                ? cantidadesManuales[c.id] 
+                                : (c.stock_minimo - c.stock_actual);
+                            
                             const subtotal = cantidadNecesaria * precioElegido.precio_unitario;
                             
                             ordenes[provId].productos.push({

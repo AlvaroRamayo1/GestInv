@@ -13,7 +13,8 @@ export default telegramChannel({
 
       const replyMarkup = {
         keyboard: [
-          [{ text: "📦 Auditar Stock" }, { text: "🛒 Calcular Orden Óptima" }]
+          [{ text: "📦 Stock Actual" }, { text: "🛒 Crear orden de compra" }],
+          [{ text: "🤝 Agregar Proveedor" }]
         ],
         resize_keyboard: true,
         one_time_keyboard: false
@@ -83,7 +84,8 @@ export default telegramChannel({
             // Teclado inferior físico nativo estructurado perfectamente
             replyMarkup = {
               keyboard: [
-                [{ text: "📦 Auditar Stock" }, { text: "🛒 Calcular Orden Óptima" }]
+                [{ text: "📦 Stock Actual" }, { text: "🛒 Crear orden de compra" }],
+                [{ text: "🤝 Agregar Proveedor" }]
               ],
               resize_keyboard: true,
               one_time_keyboard: false
