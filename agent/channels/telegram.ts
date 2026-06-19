@@ -15,8 +15,6 @@ export default telegramChannel({
 
           text = `Solicitud de Aprobación\n\nPropuesta:\n${mensaje}\n\nPor favor, confirme si aprueba esta solicitud.`;
 
-          // SOLUCIÓN: Definimos las opciones explícitamente para obligar a 
-          // renderTelegramInputRequest a generar el inline_keyboard nativo de Telegram.
           const modifiedRequest = {
             ...request,
             options: [
@@ -32,8 +30,6 @@ export default telegramChannel({
           const defaultRender = renderTelegramInputRequest(request, channel.state);
           text = defaultRender.text;
 
-          // Si el render por defecto generó botones en línea (opciones), los preservamos.
-          // De lo contrario, usamos nuestro teclado permanente.
           if ((defaultRender.replyMarkup as any)?.inline_keyboard) {
             replyMarkup = defaultRender.replyMarkup;
           } else {
@@ -41,17 +37,17 @@ export default telegramChannel({
               keyboard: [
                 [{ text: "📦 Auditar Stock" }, { text: "🛒 Calcular Orden Óptima" }]
               ],
-              resize_keyboard: true
+              resize_keyboard: true,
+              one_time_keyboard: false
             };
           }
 
           freeformRequestId = defaultRender.freeformRequestId;
         }
 
-        // Enviamos el mensaje a Telegram con el replyMarkup correspondiente
         const result = await channel.telegram.post({
           text,
-          reply_markup: replyMarkup
+          reply_markup: (replyMarkup ? JSON.stringify(replyMarkup) : undefined) as any
         });
 
         if (freeformRequestId && result.id) {
