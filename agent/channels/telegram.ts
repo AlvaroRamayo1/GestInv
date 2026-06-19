@@ -31,14 +31,18 @@ export default telegramChannel({
           const defaultRender = renderTelegramInputRequest(request, channel.state);
           text = defaultRender.text;
           
-          // Ignoramos el replyMarkup por defecto (que suele ser ForceReply) 
-          // para forzar nuestro teclado permanente.
-          replyMarkup = {
-            keyboard: [
-              [{ text: "📦 Auditar Stock" }, { text: "🛒 Calcular Orden Óptima" }]
-            ],
-            resize_keyboard: true
-          };
+          // Si el render por defecto generó botones en línea (opciones), los preservamos.
+          // De lo contrario, usamos nuestro teclado permanente (ignorando ForceReply).
+          if ((defaultRender.replyMarkup as any)?.inline_keyboard) {
+            replyMarkup = defaultRender.replyMarkup;
+          } else {
+            replyMarkup = {
+              keyboard: [
+                [{ text: "📦 Auditar Stock" }, { text: "🛒 Calcular Orden Óptima" }]
+              ],
+              resize_keyboard: true
+            };
+          }
           
           freeformRequestId = defaultRender.freeformRequestId;
         }
