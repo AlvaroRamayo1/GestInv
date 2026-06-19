@@ -37,8 +37,7 @@ export default telegramChannel({
             keyboard: [
               [{ text: "📦 Auditar Stock" }, { text: "🛒 Calcular Orden Óptima" }]
             ],
-            resize_keyboard: true,
-            is_persistent: true
+            resize_keyboard: true
           };
           
           freeformRequestId = defaultRender.freeformRequestId;
