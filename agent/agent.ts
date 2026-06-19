@@ -1,5 +1,7 @@
 import { defineAgent } from "eve";
+import { google } from "@ai-sdk/google";
 
 export default defineAgent({
-  model: "anthropic/claude-sonnet-4.6",
+  model: google("gemini-2.5-flash"),
+  modelContextWindowTokens: 1048576,
 });
