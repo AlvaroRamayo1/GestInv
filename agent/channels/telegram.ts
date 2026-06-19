@@ -30,17 +30,16 @@ export default telegramChannel({
         } else {
           const defaultRender = renderTelegramInputRequest(request, channel.state);
           text = defaultRender.text;
-          replyMarkup = defaultRender.replyMarkup;
           
-          if (!replyMarkup || Object.keys(replyMarkup).length === 0) {
-            replyMarkup = {
-              keyboard: [
-                [{ text: "📦 Auditar Stock" }, { text: "🛒 Calcular Orden Óptima" }]
-              ],
-              resize_keyboard: true,
-              is_persistent: true
-            };
-          }
+          // Ignoramos el replyMarkup por defecto (que suele ser ForceReply) 
+          // para forzar nuestro teclado permanente.
+          replyMarkup = {
+            keyboard: [
+              [{ text: "📦 Auditar Stock" }, { text: "🛒 Calcular Orden Óptima" }]
+            ],
+            resize_keyboard: true,
+            is_persistent: true
+          };
           
           freeformRequestId = defaultRender.freeformRequestId;
         }
