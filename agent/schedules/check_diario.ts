@@ -1,5 +1,5 @@
 import { defineSchedule } from "eve/schedules";
-import telegram from "../channels/telegram.js"; // Importa tu canal
+import telegram from "../channels/telegram.ts"; // Importa tu canal
 
 export default defineSchedule({
     cron: "0 22 * * *", // Ejecutar diariamente a las 22:00 hs de tu zona horaria
