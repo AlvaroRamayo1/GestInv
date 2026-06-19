@@ -3,6 +3,49 @@ import { telegramChannel, renderTelegramInputRequest, registerTelegramFreeformPr
 export default telegramChannel({
   botUsername: "gestinvbot",
   events: {
+    "message.completed": async (event, channel, ctx) => {
+      // Extraemos el ID del chat
+      const chatId = (channel.state as any)?.chatId || (event as any).chatId;
+      const text = event.message;
+
+      // Si no hay texto, no enviamos nada
+      if (!text) return;
+
+      const replyMarkup = {
+        keyboard: [
+          [{ text: "📦 Auditar Stock" }, { text: "🛒 Calcular Orden Óptima" }]
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: false
+      };
+
+      let resultId: string | undefined;
+
+      if (process.env.TELEGRAM_BOT_TOKEN && chatId) {
+        try {
+          const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: text,
+              reply_markup: replyMarkup
+            })
+          });
+
+          const data = await response.json();
+          if (data.ok) {
+            resultId = String(data.result.message_id);
+          }
+        } catch (error) {
+          console.error("Error en el bypass de Telegram Fetch en message.completed:", error);
+        }
+      }
+
+      if (!resultId) {
+        await channel.telegram.post({ text, reply_markup: replyMarkup } as any);
+      }
+    },
     "input.requested": async (event, channel) => {
       for (const request of event.requests) {
         let text: string;
