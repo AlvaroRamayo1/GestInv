@@ -15,17 +15,19 @@ export default telegramChannel({
 
           text = `Solicitud de Aprobación\n\nPropuesta:\n${mensaje}\n\nPor favor, confirme si aprueba esta solicitud.`;
 
-          const modifiedRequest = {
-            ...request,
-            options: [
-              { id: "approve", label: "Aprobar" },
-              { id: "deny", label: "Rechazar" }
+          // Obtenemos el ID de la petición interna de Eve
+          const defaultRender = renderTelegramInputRequest(request, channel.state);
+          freeformRequestId = defaultRender.freeformRequestId;
+
+          // Construimos el inline_keyboard nativo de Telegram como objeto puro
+          replyMarkup = {
+            inline_keyboard: [
+              [
+                { text: "👍 Aprobar", callback_data: "approve" },
+                { text: "👎 Rechazar", callback_data: "deny" }
+              ]
             ]
           };
-
-          const defaultRender = renderTelegramInputRequest(modifiedRequest, channel.state);
-          replyMarkup = defaultRender.replyMarkup;
-          freeformRequestId = defaultRender.freeformRequestId;
         } else {
           const defaultRender = renderTelegramInputRequest(request, channel.state);
           text = defaultRender.text;
@@ -33,6 +35,7 @@ export default telegramChannel({
           if ((defaultRender.replyMarkup as any)?.inline_keyboard) {
             replyMarkup = defaultRender.replyMarkup;
           } else {
+            // Teclado inferior/físico nativo de Telegram como objeto puro
             replyMarkup = {
               keyboard: [
                 [{ text: "📦 Auditar Stock" }, { text: "🛒 Calcular Orden Óptima" }]
@@ -45,9 +48,10 @@ export default telegramChannel({
           freeformRequestId = defaultRender.freeformRequestId;
         }
 
+        // Enviamos el objeto sin serializar manualmente; el SDK se encarga por debajo
         const result = await channel.telegram.post({
           text,
-          reply_markup: (replyMarkup ? JSON.stringify(replyMarkup) : undefined) as any
+          reply_markup: replyMarkup
         });
 
         if (freeformRequestId && result.id) {
