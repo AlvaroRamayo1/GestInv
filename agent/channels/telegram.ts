@@ -30,7 +30,13 @@ export default telegramChannel({
         } else {
           const defaultRender = renderTelegramInputRequest(request, channel.state);
           text = defaultRender.text;
-          replyMarkup = defaultRender.replyMarkup;
+          replyMarkup = defaultRender.replyMarkup || {
+            keyboard: [
+              [{ text: "📦 Auditar Stock" }, { text: "🛒 Calcular Orden Óptima" }]
+            ],
+            resize_keyboard: true,
+            is_persistent: true
+          };
           freeformRequestId = defaultRender.freeformRequestId;
         }
 
