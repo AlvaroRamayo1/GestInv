@@ -11,17 +11,18 @@ export default telegramChannel({
 
         if (request.action?.toolName === "solicitar_aprobacion") {
           const input = request.action.input as { mensaje?: string };
-          const mensaje = input?.mensaje || "Se requiere confirmacion para continuar.";
-          
-          text = `Solicitud de Aprobacion\n\nPropuesta:\n${mensaje}\n\nPor favor, confirme si aprueba esta solicitud.`;
+          const mensaje = input?.mensaje || "Se requiere confirmación para continuar.";
 
+          text = `Solicitud de Aprobación\n\nPropuesta:\n${mensaje}\n\nPor favor, confirme si aprueba esta solicitud.`;
+
+          // SOLUCIÓN: Definimos las opciones explícitamente para obligar a 
+          // renderTelegramInputRequest a generar el inline_keyboard nativo de Telegram.
           const modifiedRequest = {
             ...request,
-            options: request.options?.map(opt => {
-              if (opt.id === "approve") return { ...opt, label: "Aprobar" };
-              if (opt.id === "deny") return { ...opt, label: "Rechazar" };
-              return opt;
-            })
+            options: [
+              { id: "approve", label: "Aprobar" },
+              { id: "deny", label: "Rechazar" }
+            ]
           };
 
           const defaultRender = renderTelegramInputRequest(modifiedRequest, channel.state);
@@ -30,9 +31,9 @@ export default telegramChannel({
         } else {
           const defaultRender = renderTelegramInputRequest(request, channel.state);
           text = defaultRender.text;
-          
+
           // Si el render por defecto generó botones en línea (opciones), los preservamos.
-          // De lo contrario, usamos nuestro teclado permanente (ignorando ForceReply).
+          // De lo contrario, usamos nuestro teclado permanente.
           if ((defaultRender.replyMarkup as any)?.inline_keyboard) {
             replyMarkup = defaultRender.replyMarkup;
           } else {
@@ -43,10 +44,11 @@ export default telegramChannel({
               resize_keyboard: true
             };
           }
-          
+
           freeformRequestId = defaultRender.freeformRequestId;
         }
 
+        // Enviamos el mensaje a Telegram con el replyMarkup correspondiente
         const result = await channel.telegram.post({
           text,
           reply_markup: replyMarkup
